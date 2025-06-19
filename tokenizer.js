@@ -1,4 +1,7 @@
 export function tokenizeWord(word) {
+    if (word.startsWith("r'")) {
+        return [word];
+    }
     const alwaysSplit = word.match(/^(qu|tu|tch|li)\'/i);
     if (alwaysSplit) {
         const prefix = alwaysSplit[1];
@@ -987,6 +990,17 @@ const nobreak = {
         "s'tchâge",
         "s'tcheux",
         "s'tchi",
+        "s'sai",
+        "s'sas",
+        "s'sa",
+        "s'sons",
+        "s'sez",
+        "s'sont",
+        "s'sais",
+        "s'sait",
+        "s'sêmes",
+        "s'sêtes",
+        "s'saient",
     ].map(stem),
     t: [
         "t'n",
