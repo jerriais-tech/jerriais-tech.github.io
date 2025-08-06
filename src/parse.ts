@@ -46,7 +46,7 @@ function parseLinks(
       const url = new URL(href, "http://example.com");
       const isRelative = url.origin === new URL("http://example.com").origin;
       if (isRelative) {
-        href = href.replace(/\.html/, "");
+        href = href.replace(/\.html/, "/");
         const isRootRelative = href.startsWith("/");
         const isPageRelative = href.startsWith("#");
         if (rewriteRelativeUrls && !isRootRelative && !isPageRelative) {
