@@ -1,5 +1,6 @@
 import React from "react";
 import Content from "./Content";
+import Layout from "./Layout";
 
 interface Props {
   title: string;
@@ -10,7 +11,7 @@ interface Props {
   content: string;
 }
 
-const Layout: React.FC<Props> = ({
+const LesPagesLayout: React.FC<Props> = ({
   title,
   author,
   authorSlug,
@@ -19,13 +20,7 @@ const Layout: React.FC<Props> = ({
   content,
 }) => {
   return (
-    <html translate="no">
-      <head>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title}</title>
-        <link href="/corpus/index.css" rel="stylesheet" />
-      </head>
+    <Layout title={title}>
       <main className="my-8 mx-8 max-w-2xl md:mx-auto">
         <article>
           <header className="my-4">
@@ -55,8 +50,8 @@ const Layout: React.FC<Props> = ({
           </footer>
         </article>
       </main>
-    </html>
+    </Layout>
   );
 };
 
-export default Layout;
+export default LesPagesLayout;
