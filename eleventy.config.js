@@ -15,7 +15,6 @@ export default async function (eleventyConfig) {
   eleventyConfig.setInputDirectory("content");
   eleventyConfig.setLayoutsDirectory("../layouts");
 
-  /*
   await eleventyConfig.addPlugin(eleventyLesPageJerriaisesPlugin, {
     ignore: [
       "0",
@@ -28,7 +27,6 @@ export default async function (eleventyConfig) {
     ],
     layout: "lespages.11ty.tsx",
   });
-  */
 
   eleventyConfig.addTemplateFormats("11ty.tsx");
   eleventyConfig.addExtension(["11ty.tsx"], {

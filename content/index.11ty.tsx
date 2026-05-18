@@ -40,6 +40,8 @@ async function submitForm(event) {
     failure();
   }
 }
+
+form.addEventListener('submit', submitForm);
 `;
 
 export default function render(_data: unknown) {
@@ -195,7 +197,7 @@ export default function render(_data: unknown) {
         </h2>
         <p className="mb-6 text-gray-600">Contact us using the form below.</p>
         <div className="max-w-2xl">
-          <form id="form" onSubmit="submitForm(event)" action="#">
+          <form id="form">
             <fieldset>
               <div className="mb-4">
                 <label
