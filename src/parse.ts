@@ -31,9 +31,88 @@ turndownService.addRule("bold", {
       .join("<br>"),
 });
 
-function getViyizEtout(element: cheerio.Cheerio<any>): cheerio.Cheerio<any> {
-  return element.find('font[size="2"]');
+// ── Viyiz étout detection ──────────────────────────────────────────────────
+
+interface ViyizSection {
+  toRemove: cheerio.Cheerio<cheerio.AnyNode>[];
+  $links: cheerio.Cheerio<cheerio.AnyNode>;
 }
+
+/**
+ * Locates the "Viyiz étout" (see-also) section in the page body.
+ *
+ * Two strategies, tried in order:
+ *
+ * 1. `<font size="2">` containing a `<ul>` with `<a>` links — the original
+ *    site's main pattern. Only the font blocks that actually contain a link
+ *    list are matched; font blocks used for styled body text are left alone.
+ *
+ * 2. An element whose text starts with "Viyiz" (and contains "étout")
+ *    followed by a `<ul>` with links — covers the 27 pages that use a bare
+ *    `<i>Viyiz étout:</i>` without a font wrapper.
+ */
+function findViyizSection(
+  $: cheerio.CheerioAPI,
+  body: cheerio.Cheerio<cheerio.AnyNode>
+): ViyizSection | null {
+  // Strategy 1: font[size="2"]` containing a list of links.
+  // Note: HTML parsers often hoist <ul> out of inline <font> (block-in-inline
+  // mismatch), leaving <li> elements as direct children of the font element.
+  // We check for <li> (not <ul> or bare <a>) to distinguish viyiz link lists
+  // from author-attribution spans that also use font[size="2"] with one link.
+  const $font2 = (body as cheerio.Cheerio<any>)
+    .find('font[size="2"]')
+    .filter((_i, el) => $(el).find("li").length > 0)
+    .first();
+  if ($font2.length > 0) {
+    return { toRemove: [$font2], $links: $font2.find("a") };
+  }
+
+  // Strategy 2: element with text "Viyiz étout" followed by a <ul>
+  const VIYIZ_RE = /^viyiz.*[e\u00e9]tout/i;
+  const candidates = (body as cheerio.Cheerio<any>)
+    .find("i, em, b, strong, p, div, span, td")
+    .toArray();
+
+  for (const el of candidates) {
+    const $el = $(el) as cheerio.Cheerio<any>;
+    if (!VIYIZ_RE.test($el.text().trim())) continue;
+
+    // Look for a following <ul> with links — try increasingly wide searches
+    const searches: Array<[cheerio.Cheerio<any>, cheerio.Cheerio<any>]> = [
+      [$el, $el.next("ul")],
+      [$el, $el.nextAll("ul").first()],
+      [$el.parent() as cheerio.Cheerio<any>, ($el.parent() as cheerio.Cheerio<any>).next("ul")],
+      [$el.parent() as cheerio.Cheerio<any>, ($el.parent() as cheerio.Cheerio<any>).nextAll("ul").first()],
+    ];
+
+    for (const [$label, $ul] of searches) {
+      if ($ul.length > 0 && $ul.find("a").length > 0) {
+        return { toRemove: [$label, $ul], $links: $ul.find("a") };
+      }
+    }
+  }
+
+  return null;
+}
+
+/** Rewrites a single href value using the same rules as parseLinks. */
+function rewriteHref(href: string, rewriteRelativeUrls: boolean): string {
+  const url = new URL(href, "http://example.com");
+  const isRelative =
+    url.origin === new URL("http://example.com").origin;
+  if (!isRelative) return href;
+
+  href = href.replace(/\.html/, "/");
+  const isRootRelative = href.startsWith("/");
+  const isPageRelative = href.startsWith("#");
+  if (rewriteRelativeUrls && !isRootRelative && !isPageRelative) {
+    href = `../${href}`;
+  }
+  return href;
+}
+
+// ── Link / image rewriting ─────────────────────────────────────────────────
 
 function parseLinks(
   element: cheerio.Cheerio<any>,
@@ -79,8 +158,10 @@ function parseImages(element: cheerio.Cheerio<any>) {
 function parseContent($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean) {
   const body = $("body").clone();
 
-  const viyizEtout = getViyizEtout(body);
-  viyizEtout.remove();
+  const section = findViyizSection($, body);
+  if (section) {
+    section.toRemove.forEach((el) => el.remove());
+  }
   const back = body.find('a[href="../jerriais.html"]');
   back.remove();
   const title = body.find('font[color="#215e21"] h2');
@@ -96,16 +177,17 @@ function parseContent($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean) {
 
 function parseRelated($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean) {
   const body = $("body").clone();
-  const viyizEtout = getViyizEtout(body);
-  parseLinks(viyizEtout, rewriteRelativeUrls);
-  return viyizEtout
-    .find("a")
+  const section = findViyizSection($, body);
+  if (!section) return [];
+
+  return section.$links
     .toArray()
     .map((el) => {
-      const $el = $(el);
-      return { url: $el.attr("href"), text: $el.text() };
+      const href = el.attribs.href ?? el.attribs.HREF;
+      if (!href) return null;
+      return { url: rewriteHref(href, rewriteRelativeUrls), text: $(el).text() };
     })
-    .filter((link): link is { url: string; text: string } => Boolean(link.url));
+    .filter((link): link is { url: string; text: string } => Boolean(link?.url));
 }
 
 function renderMarkdown(content: string) {
@@ -151,7 +233,10 @@ export const AUTHORS = {
 
 function findAuthor($: cheerio.CheerioAPI): [string, string] | undefined {
   const body = $("body").clone();
-  getViyizEtout(body).remove();
+  const section = findViyizSection($, body);
+  if (section) {
+    section.toRemove.forEach((el) => el.remove());
+  }
   const links = body.find("a[href]").toArray();
 
   return Object.entries(AUTHORS).reduce(

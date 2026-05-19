@@ -35,7 +35,7 @@ const LesPagesLayout: React.FC<Props> = ({
           </header>
           <Content>{content}</Content>
           <footer className="prose my-8">
-            {related && (
+          {related && related.length > 0 && (
               <>
                 <h3>Viyiz étout</h3>
                 <ul>
