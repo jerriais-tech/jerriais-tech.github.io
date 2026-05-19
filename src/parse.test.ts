@@ -13,6 +13,12 @@ function parse(filename: string) {
   return parseFile(buf, { rewriteRelativeUrls: false }).data;
 }
 
+function parseContent(filename: string) {
+  const buf = readFileSync(join(BASE, filename));
+  return parseFile(buf, { rewriteRelativeUrls: false }).content;
+}
+
+
 describe("author detection", () => {
   it("blair.html — single italic+date attribution at end", () => {
     const { authorSlug, multiAuthorSuspected } = parse("blair.html");
@@ -174,5 +180,26 @@ describe("attribution date + source extraction", () => {
     const { date, dateYearAmbiguous } = parse("lettrejerriaisecl2.html");
     expect(date).toBe("1990-03-18");
     expect(dateYearAmbiguous).toBe(true);
+  });
+});
+
+describe("pronunciation player", () => {
+  it("iles.html — bare pronunciation link becomes button with data-audio", () => {
+    const content = parseContent("iles.html");
+    expect(content).toContain('class="pronunciation"');
+    expect(content).toContain('data-audio="jerri.wav"');
+    // original <a> href must not survive
+    expect(content).not.toMatch(/<a [^>]*jerri\.wav/i);
+  });
+
+  it("st_pierre.html — pronunciation link with label text", () => {
+    const content = parseContent("st_pierre.html");
+    expect(content).toContain('data-audio="saint_pierre.wav"');
+    expect(content).toContain("St Pi");
+  });
+
+  it("blair.html — no pronunciation links present", () => {
+    const content = parseContent("blair.html");
+    expect(content).not.toContain("pronunciation");
   });
 });

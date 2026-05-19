@@ -18,9 +18,11 @@ const turndownService = new TurndownService();
 turndownService.use([tables]);
 turndownService.keep(function (node, _options) {
   return (
-    node.nodeName === "A" &&
-    Boolean(node.getAttribute("name")) &&
-    !Boolean(node.getAttribute("href"))
+    (node.nodeName === "A" &&
+      Boolean(node.getAttribute("name")) &&
+      !Boolean(node.getAttribute("href"))) ||
+    (node.nodeName === "BUTTON" &&
+      node.getAttribute("class") === "pronunciation")
   );
 });
 turndownService.addRule("emphasis", {
@@ -166,6 +168,53 @@ function parseImages(element: cheerio.Cheerio<any>) {
   });
 }
 
+// ── Pronunciation player ───────────────────────────────────────────────────
+
+const AUDIO_HREF_RE = /\.(wav|mp3)$/i;
+const ECOUTE_SRC_RE = /ecoute\.jpg$/i;
+
+/** Replace <a href="*.wav|*.mp3"><img src="ecoute.jpg"> [label]</a> with
+ *  <button class="pronunciation" data-audio="…"> so the page JS can play
+ *  the clip inline instead of navigating away.
+ *  Must be called AFTER parseLinks() and parseImages() so hrefs/srcs are
+ *  already rewritten. */
+function parsePronunciation(
+  $root: cheerio.CheerioAPI,
+  element: cheerio.Cheerio<any>
+) {
+  element.find("a").each((_i, el) => {
+    const href = el.attribs.href ?? el.attribs.HREF ?? "";
+    if (!AUDIO_HREF_RE.test(href)) return;
+
+    const $a = $root(el);
+    const img = $a.find("img, IMG").first();
+    if (!img.length) return;
+    const imgSrc = img.attr("src") ?? img.attr("SRC") ?? "";
+    if (!ECOUTE_SRC_RE.test(imgSrc)) return;
+
+    // Scrub decorative alt; strip layout attributes left over from old HTML
+    img.attr("alt", "");
+    img.removeAttr("align");
+    img.removeAttr("ALIGN");
+
+    // Collect any text label from text nodes inside the <a>
+    const label = $a
+      .contents()
+      .toArray()
+      .filter((n) => n.type === "text")
+      .map((n) => ((n as any).data ?? "").trim())
+      .filter(Boolean)
+      .join(" ");
+
+    $a.replaceWith(
+      `<button class="pronunciation" type="button" data-audio="${href}" aria-label="Ouï la prononciation">` +
+        $root.html(img[0] as any) +
+        (label ? ` ${label}` : "") +
+        `</button>`
+    );
+  });
+}
+
 function parseContent($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean) {
   const body = $("body").clone();
 
@@ -182,6 +231,7 @@ function parseContent($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean) {
   if (rewriteRelativeUrls) {
     parseImages(body);
   }
+  parsePronunciation($, body);
 
   return body.html() ?? "";
 }
