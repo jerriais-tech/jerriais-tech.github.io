@@ -313,6 +313,117 @@ function findAuthor($: cheerio.CheerioAPI): AuthorResult | undefined {
   return { slug: winnerSlug, name: winner.name, multiAuthorSuspected };
 }
 
+// ── Keyword/tag extraction ─────────────────────────────────────────────────
+
+const KEYWORDS_STOPLIST = new Set([
+  "jèrriais",
+  "jerriais",
+  "jersey language",
+  "langue jersiaise",
+  "language",
+  "langue",
+  "channel islands",
+  "îles anglo-normandes",
+  "iles anglo-normandes",
+  "normandie",
+  "normandy",
+  "jersey",
+  "hot potatoes",
+  "half-baked software",
+  "windows",
+  "university of victoria",
+]);
+
+function extractTags($: cheerio.CheerioAPI): string[] {
+  const content = $('meta[name="keywords" i]').attr("content");
+  if (!content) return [];
+  return content
+    .split(",")
+    .map((t) => t.trim())
+    .filter(
+      (t) =>
+        t.length > 0 &&
+        !t.includes("\uFFFD") && // discard latin1-garbled terms
+        !KEYWORDS_STOPLIST.has(t.toLowerCase())
+    );
+}
+
+// ── Attribution date + source extraction ──────────────────────────────────
+
+const DATE_RE = /\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b/;
+
+function isoDate(day: string, month: string, year: string): string {
+  const y = year.length === 2 ? "19" + year : year;
+  return `${y}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
+interface AttributionDate {
+  date: string; // ISO YYYY-MM-DD
+  source?: string;
+}
+
+/** Finds the last top-level <i>/<em> in the body (after viyiz removal) that
+ *  contains a date pattern, then extracts the date and any publication source
+ *  (newspaper / journal name) from the same line as the date. */
+function extractAttributionDate(
+  $: cheerio.CheerioAPI
+): AttributionDate | undefined {
+  const body = $("body").clone();
+  const section = findViyizSection($, body);
+  if (section) {
+    section.toRemove.forEach((el) => el.remove());
+  }
+
+  let lastEl: cheerio.Cheerio<cheerio.AnyNode> | undefined;
+
+  // Only consider top-level italic elements (not nested inside another i/em).
+  body
+    .find("i, em")
+    .filter((_i, el) => $(el).parents("i, em").length === 0)
+    .each((_i, el) => {
+      const $el = $(el);
+      if (DATE_RE.test($el.text())) {
+        lastEl = $el; // keep updating — last match wins
+      }
+    });
+
+  if (!lastEl) return undefined;
+
+  const dateMatch = DATE_RE.exec(lastEl.text());
+  if (!dateMatch) return undefined;
+
+  const date = isoDate(dateMatch[1], dateMatch[2], dateMatch[3]);
+
+  // Derive source: normalise the element's HTML to plain lines, find the line
+  // that holds the date, strip the date and any noise words from that line.
+  const lines = (lastEl.html() ?? "")
+    .replace(/<br\s*\/?>/gi, "\n") // treat <br> as line break
+    .replace(/<a[^>]*>.*?<\/a>/gsi, "") // strip author links
+    .replace(/<[^>]+>/g, "") // strip remaining tags
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const dateLine = lines.find((l) => DATE_RE.test(l));
+  if (!dateLine) return { date };
+
+  const sourceText = dateLine
+    .replace(DATE_RE, "")
+    .replace(/\([^)]*\)/g, "") // remove parentheticals like (èrveue ...)
+    .replace(/\b[Pp]ar\b/g, "")
+    .replace(/\bm[iî]s?\s*[àa]\s*jour\b/gi, "")
+    .replace(/\b[eè]rveu[eé]?\b/gi, "")
+    .replace(/[,;:\s]+/g, " ")
+    .trim();
+
+  return {
+    date,
+    source: sourceText.length >= 2 ? sourceText : undefined,
+  };
+}
+
+// ── Public API ─────────────────────────────────────────────────────────────
+
 export function parseFile(
   file: Buffer,
   options: {
@@ -327,6 +438,8 @@ export function parseFile(
   const authorResult = findAuthor($);
   const content = parseContent($, options.rewriteRelativeUrls);
   const related = parseRelated($, options.rewriteRelativeUrls);
+  const tags = extractTags($);
+  const attribution = extractAttributionDate($);
 
   return {
     content: renderMarkdown(content),
@@ -336,6 +449,9 @@ export function parseFile(
       authorSlug: authorResult?.slug,
       multiAuthorSuspected: authorResult?.multiAuthorSuspected ?? false,
       related,
+      tags,
+      date: attribution?.date,
+      source: attribution?.source,
     },
   };
 }

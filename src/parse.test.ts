@@ -85,3 +85,52 @@ describe("author detection", () => {
     expect(multiAuthorSuspected).toBe(false);
   });
 });
+
+describe("tags extraction", () => {
+  it("organnique.html — unique topic keywords extracted, boilerplate filtered", () => {
+    const { tags } = parse("organnique.html");
+    expect(tags).toContain("organic farming");
+    expect(tags).toContain("produits biologiques");
+    expect(tags).not.toContain("Jèrriais");
+    expect(tags).not.toContain("language");
+    expect(tags).not.toContain("Channel Islands");
+  });
+
+  it("helier.html — domain-specific keywords retained", () => {
+    const { tags } = parse("helier.html");
+    expect(tags).toContain("hagiography");
+    expect(tags).toContain("patron saint");
+    expect(tags).not.toContain("Jersey");
+    expect(tags).not.toContain("langue");
+  });
+
+  it("blair.html — only boilerplate keywords → empty tags", () => {
+    const { tags } = parse("blair.html");
+    expect(tags).toEqual([]);
+  });
+});
+
+describe("attribution date + source extraction", () => {
+  it("blair.html — date from italic attribution at end", () => {
+    const { date, source } = parse("blair.html");
+    expect(date).toBe("2002-12-11");
+    expect(source).toBeUndefined();
+  });
+
+  it("1914gj.html — date from italic attribution; no publication source", () => {
+    const { date, source } = parse("1914gj.html");
+    expect(date).toBe("2014-08-04");
+    expect(source).toBeUndefined();
+  });
+
+  it("1901.html — date and publication source extracted from italic block", () => {
+    const { date, source } = parse("1901.html");
+    expect(date).toBe("1901-01-09");
+    expect(source).toBe("Nouvelle Chronique de Jersey");
+  });
+
+  it("organnique.html — no date in attribution context", () => {
+    const { date } = parse("organnique.html");
+    expect(date).toBeUndefined();
+  });
+});
