@@ -15,7 +15,7 @@ export default async function (eleventyConfig) {
   eleventyConfig.setInputDirectory("content");
   eleventyConfig.setLayoutsDirectory("../layouts");
 
-  eleventyConfig.addPassthroughCopy("pronunciation.js");
+  eleventyConfig.addPassthroughCopy({ "content/pronunciation.js": "pronunciation.js" });
 
   await eleventyConfig.addPlugin(eleventyLesPageJerriaisesPlugin, {
     ignore: [
