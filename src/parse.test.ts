@@ -184,17 +184,15 @@ describe("attribution date + source extraction", () => {
 });
 
 describe("pronunciation player", () => {
-  it("iles.html — bare pronunciation link becomes button with data-audio", () => {
+  it("iles.html — bare pronunciation link becomes <a> with pronunciation class", () => {
     const content = parseContent("iles.html");
-    expect(content).toContain('class="pronunciation"');
-    expect(content).toContain('data-audio="jerri.wav"');
-    // original <a> href must not survive
-    expect(content).not.toMatch(/<a [^>]*jerri\.wav/i);
+    expect(content).toContain('<a class="pronunciation"');
+    expect(content).toContain('href="jerri.wav"');
   });
 
-  it("st_pierre.html — pronunciation link with label text", () => {
+  it("st_pierre.html — pronunciation link preserves label text", () => {
     const content = parseContent("st_pierre.html");
-    expect(content).toContain('data-audio="saint_pierre.wav"');
+    expect(content).toContain('href="saint_pierre.wav"');
     expect(content).toContain("St Pi");
   });
 

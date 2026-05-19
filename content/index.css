@@ -2,8 +2,8 @@
 @source "../content";
 @plugin "@tailwindcss/typography";
 
-/* Pronunciation player button */
-button.pronunciation {
+/* Pronunciation player */
+a.pronunciation {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -15,12 +15,12 @@ button.pronunciation {
   opacity: 0.85;
   transition: opacity 0.15s;
 }
-button.pronunciation:hover,
-button.pronunciation:focus-visible {
+a.pronunciation:hover,
+a.pronunciation:focus-visible {
   opacity: 1;
   outline: 2px solid currentColor;
   outline-offset: 2px;
 }
-button.pronunciation--playing img {
+a.pronunciation--playing img {
   filter: brightness(1.5) saturate(0.3);
 }

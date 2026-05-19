@@ -2,19 +2,6 @@ import React from "react";
 import Content from "./Content";
 import Layout from "./Layout";
 
-const pronunciationScript = `
-document.querySelectorAll('button.pronunciation').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    var audio = new Audio(btn.dataset.audio);
-    audio.play();
-    btn.classList.add('pronunciation--playing');
-    audio.addEventListener('ended', function() {
-      btn.classList.remove('pronunciation--playing');
-    });
-  });
-});
-`;
-
 interface Props {
   title: string;
   author?: string;
@@ -64,7 +51,7 @@ const LesPagesLayout: React.FC<Props> = ({
           </footer>
         </article>
       </main>
-      <script dangerouslySetInnerHTML={{ __html: pronunciationScript }} />
+      <script src="/pronunciation.js" defer={true} />
     </Layout>
   );
 };

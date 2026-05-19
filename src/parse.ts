@@ -18,12 +18,18 @@ const turndownService = new TurndownService();
 turndownService.use([tables]);
 turndownService.keep(function (node, _options) {
   return (
-    (node.nodeName === "A" &&
-      Boolean(node.getAttribute("name")) &&
-      !Boolean(node.getAttribute("href"))) ||
-    (node.nodeName === "BUTTON" &&
-      node.getAttribute("class") === "pronunciation")
+    node.nodeName === "A" &&
+    Boolean(node.getAttribute("name")) &&
+    !Boolean(node.getAttribute("href"))
   );
+});
+// Preserve pronunciation links as raw HTML so their class/href survive
+// markdown conversion. (turndownService.keep() has a scoping issue in
+// Node.js that prevents function filters from firing; addRule works correctly.)
+turndownService.addRule("pronunciation", {
+  filter: (node) =>
+    node.nodeName === "A" && node.getAttribute("class") === "pronunciation",
+  replacement: (_content, node) => (node as any).outerHTML ?? _content,
 });
 turndownService.addRule("emphasis", {
   filter: ["em", "i"],
@@ -173,9 +179,10 @@ function parseImages(element: cheerio.Cheerio<any>) {
 const AUDIO_HREF_RE = /\.(wav|mp3)$/i;
 const ECOUTE_SRC_RE = /ecoute\.jpg$/i;
 
-/** Replace <a href="*.wav|*.mp3"><img src="ecoute.jpg"> [label]</a> with
- *  <button class="pronunciation" data-audio="…"> so the page JS can play
- *  the clip inline instead of navigating away.
+/** Rewrite <a href="*.wav|*.mp3"><img src="ecoute.jpg"> [label]</a> as
+ *  <a class="pronunciation" href="…"> for progressive enhancement:
+ *  without JS the link opens/plays the audio file; with JS the click handler
+ *  in pronunciation.js intercepts and plays inline via Audio().
  *  Must be called AFTER parseLinks() and parseImages() so hrefs/srcs are
  *  already rewritten. */
 function parsePronunciation(
@@ -207,10 +214,10 @@ function parsePronunciation(
       .join(" ");
 
     $a.replaceWith(
-      `<button class="pronunciation" type="button" data-audio="${href}" aria-label="Ouï la prononciation">` +
+      `<a class="pronunciation" href="${href}" aria-label="Ouï la prononciation">` +
         $root.html(img[0] as any) +
         (label ? ` ${label}` : "") +
-        `</button>`
+        `</a>`
     );
   });
 }
