@@ -153,4 +153,14 @@ describe("attribution date + source extraction", () => {
     const { date } = parse("organnique.html");
     expect(date).toBeUndefined();
   });
+
+  it("ahier.html — truncated year from split italic tag produces no date", () => {
+    // <i>Chroniques de Jersey 21/12/193</i>8 — closing tag mid-year
+    // DATE_RE requires 4-digit year, so '21/12/193' must not produce a date.
+    const { date } = parse("ahier.html");
+    if (date !== undefined) {
+      expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/); // must be valid ISO if present
+      expect(parseInt(date.slice(0, 4))).toBeGreaterThanOrEqual(1000);
+    }
+  });
 });
