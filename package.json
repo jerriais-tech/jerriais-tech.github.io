@@ -6,6 +6,7 @@
     "pages": "tsx src/import all 'lespages/members.societe-jersiaise.org/geraint' 'content'",
     "start": "eleventy --serve",
     "build": "eleventy",
+    "review": "tsx src/review.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
