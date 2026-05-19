@@ -7,6 +7,7 @@ interface Props {
   author?: string;
   authorSlug?: string;
   authorPage?: boolean;
+  multiAuthorSuspected?: boolean;
   related: { url: string; text: string }[];
   content: string;
 }

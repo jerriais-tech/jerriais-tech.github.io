@@ -231,25 +231,86 @@ export const AUTHORS = {
   jerpoem: "Geraint Jennings",
 };
 
-function findAuthor($: cheerio.CheerioAPI): [string, string] | undefined {
+interface AuthorResult {
+  slug: string;
+  name: string;
+  /** True when 2+ distinct known authors each score ≥ 3 (italic/par context),
+   *  suggesting the page may have multiple attributed authors or that one
+   *  high-scoring link is actually a subject reference (elegy, acrostic, etc.).
+   *  Surfaces the page in the manual review queue. */
+  multiAuthorSuspected: boolean;
+}
+
+function findAuthor($: cheerio.CheerioAPI): AuthorResult | undefined {
   const body = $("body").clone();
   const section = findViyizSection($, body);
   if (section) {
     section.toRemove.forEach((el) => el.remove());
   }
-  const links = body.find("a[href]").toArray();
 
-  return Object.entries(AUTHORS).reduce(
-    (found, [slug, name]) => {
-      if (found) {
-        return found;
-      }
-      if (links.some((element) => element.attribs.href === `${slug}.html`)) {
-        return [slug, name];
-      }
-    },
-    undefined as [string, string] | undefined
+  // Serialise the cleaned body once for positional and context analysis.
+  const bodyHtml = body.html() ?? "";
+  const bodyLen = bodyHtml.length || 1;
+
+  // Collect candidates: one entry per unique author slug, keeping the last
+  // (highest document position) occurrence of each.
+  const candidates = new Map<string, { name: string; score: number; pos: number }>();
+
+  body.find("a[href]").each((_i, el) => {
+    const href = $(el).attr("href") ?? "";
+    const slug = href.replace(/\.html$/, "");
+    const name = AUTHORS[slug as keyof typeof AUTHORS];
+    if (!name) return;
+
+    // Locate this href in the serialised HTML to derive position and context.
+    // Use lastIndexOf so that if there are multiple identical hrefs, we score
+    // against the last occurrence (attribution style).
+    const pos = bodyHtml.lastIndexOf(`href="${href}"`);
+
+    // ── Signal 1: inside <i> or <em> ──────────────────────────────────────
+    const inItalic = $(el).closest("i, em").length > 0;
+
+    // ── Signal 2: preceded by "par" (tag-stripped) ────────────────────────
+    const before = bodyHtml.slice(Math.max(0, pos - 60), pos);
+    const beforeText = before.replace(/<[^>]+>/g, "").trimEnd();
+    const parPrefix = /[Pp]ar\s*$/.test(beforeText);
+
+    // ── Signal 3: date within 80 chars after the link ─────────────────────
+    const after = bodyHtml.slice(pos, pos + 80);
+    const hasDate = /\d{1,2}\/\d{1,2}\/\d{2,4}|\b(?:19|20)\d{2}\b/.test(after);
+
+    // ── Signal 4: position in document ────────────────────────────────────
+    const relPos = pos / bodyLen;
+    const posScore = relPos > 0.75 ? 2 : relPos > 0.5 ? 1 : 0;
+
+    const score =
+      (inItalic ? 3 : 0) +
+      (parPrefix ? 3 : 0) +
+      (hasDate ? 2 : 0) +
+      posScore;
+
+    // Keep the entry with the higher score; ties keep the later position.
+    const existing = candidates.get(slug);
+    if (!existing || score > existing.score || (score === existing.score && pos > existing.pos)) {
+      candidates.set(slug, { name, score, pos });
+    }
+  });
+
+  if (candidates.size === 0) return undefined;
+
+  // Sort by score descending, then position descending (last in doc wins ties).
+  const sorted = [...candidates.entries()].sort(
+    ([, a], [, b]) => b.score - a.score || b.pos - a.pos
   );
+
+  const [winnerSlug, winner] = sorted[0];
+
+  // Flag when 2+ distinct slugs each score ≥ 3 — probable multi-author or
+  // subject-link false positive.
+  const highScorers = sorted.filter(([, c]) => c.score >= 3);
+  const multiAuthorSuspected = highScorers.length >= 2;
+
+  return { slug: winnerSlug, name: winner.name, multiAuthorSuspected };
 }
 
 export function parseFile(
@@ -263,7 +324,7 @@ export function parseFile(
 } {
   const $ = cheerio.load(file);
   const title = $("title").text();
-  const [authorSlug, author] = findAuthor($) ?? [,];
+  const authorResult = findAuthor($);
   const content = parseContent($, options.rewriteRelativeUrls);
   const related = parseRelated($, options.rewriteRelativeUrls);
 
@@ -271,8 +332,9 @@ export function parseFile(
     content: renderMarkdown(content),
     data: {
       title,
-      author,
-      authorSlug,
+      author: authorResult?.name,
+      authorSlug: authorResult?.slug,
+      multiAuthorSuspected: authorResult?.multiAuthorSuspected ?? false,
       related,
     },
   };
