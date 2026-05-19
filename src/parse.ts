@@ -3,6 +3,17 @@ import TurndownService from "turndown";
 // @ts-ignore
 import { tables } from "@joplin/turndown-plugin-gfm";
 
+/** Decode an HTML file buffer as UTF-8; fall back to ISO-8859-1 if the bytes
+ *  are not valid UTF-8.  879 of the 7,379 source files are latin1-encoded
+ *  without a charset declaration, so cheerio.load(Buffer) would garble them. */
+function decodeHtmlBuffer(buf: Buffer): string {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(buf);
+  } catch {
+    return new TextDecoder("iso-8859-1").decode(buf);
+  }
+}
+
 const turndownService = new TurndownService();
 turndownService.use([tables]);
 turndownService.keep(function (node, _options) {
@@ -340,12 +351,7 @@ function extractTags($: cheerio.CheerioAPI): string[] {
   return content
     .split(",")
     .map((t) => t.trim())
-    .filter(
-      (t) =>
-        t.length > 0 &&
-        !t.includes("\uFFFD") && // discard latin1-garbled terms
-        !KEYWORDS_STOPLIST.has(t.toLowerCase())
-    );
+    .filter((t) => t.length > 0 && !KEYWORDS_STOPLIST.has(t.toLowerCase()));
 }
 
 // ── Attribution date + source extraction ──────────────────────────────────
@@ -433,7 +439,7 @@ export function parseFile(
   content: string;
   data: Record<string, any>;
 } {
-  const $ = cheerio.load(file);
+  const $ = cheerio.load(decodeHtmlBuffer(file));
   const title = $("title").text();
   const authorResult = findAuthor($);
   const content = parseContent($, options.rewriteRelativeUrls);

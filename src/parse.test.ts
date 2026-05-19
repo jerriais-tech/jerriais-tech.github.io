@@ -86,6 +86,26 @@ describe("author detection", () => {
   });
 });
 
+describe("encoding", () => {
+  it("12penjqzw.html (latin1) — title decoded correctly, not garbled", () => {
+    // Raw byte 0xE9 in title ('é') would become U+FFFD without latin1 fallback.
+    const { title } = parse("12penjqzw.html");
+    expect(title).toBe("Un quiz auve des neunméthos");
+    expect(title).not.toContain("\uFFFD");
+  });
+
+  it("blair.html (latin1) — boilerplate keyword properly decoded then filtered", () => {
+    // 'Jèrriais' has a raw 0xE8 byte; must be decoded to è before stoplist check.
+    const { tags } = parse("blair.html");
+    expect(tags).toEqual([]);
+  });
+
+  it("reverie.html (UTF-8) — title with HTML entity still decoded correctly", () => {
+    const { title } = parse("reverie.html");
+    expect(title).toBe("Rêverie (Fragment)");
+  });
+});
+
 describe("tags extraction", () => {
   it("organnique.html — unique topic keywords extracted, boilerplate filtered", () => {
     const { tags } = parse("organnique.html");
