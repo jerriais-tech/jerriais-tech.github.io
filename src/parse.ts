@@ -74,21 +74,38 @@ function findViyizSection(
   $: cheerio.CheerioAPI,
   body: cheerio.Cheerio<cheerio.AnyNode>
 ): ViyizSection | null {
-  // Strategy 1: font[size="2"]` containing a list of links.
+  // Strategy 1: font[size="2"] containing a list of links.
   // Note: HTML parsers often hoist <ul> out of inline <font> (block-in-inline
-  // mismatch), leaving <li> elements as direct children of the font element.
-  // We check for <li> (not <ul> or bare <a>) to distinguish viyiz link lists
-  // from author-attribution spans that also use font[size="2"] with one link.
+  // mismatch). Two sub-cases:
+  //   (a) <ul> stays inside <font> → <li> elements are descendants of the font.
+  //   (b) <ul> is hoisted outside — the font ends up inside the <ul>, giving a
+  //       structure like: body > p > font (label) + body > ul > font (list).
+  //       In this case we must also remove the <ul> wrapper and the label <p>.
+  const VIYIZ_RE = /^viyiz.*[e\u00e9]tout/i;
   const $font2 = (body as cheerio.Cheerio<any>)
     .find('font[size="2"]')
     .filter((_i, el) => $(el).find("li").length > 0)
     .first();
   if ($font2.length > 0) {
-    return { toRemove: [$font2], $links: $font2.find("a") };
+    const toRemove: cheerio.Cheerio<cheerio.AnyNode>[] = [];
+    // If the font is nested inside a <ul> (hoisted case), remove the whole <ul>
+    const $listContainer: cheerio.Cheerio<any> = ($font2.parent() as cheerio.Cheerio<any>).is("ul")
+      ? ($font2.parent() as cheerio.Cheerio<any>)
+      : $font2;
+    toRemove.push($listContainer);
+    // Look backwards from the list container for a "Viyiz étout" label element
+    let $prev = $listContainer.prev() as cheerio.Cheerio<any>;
+    while ($prev.length > 0) {
+      if (VIYIZ_RE.test($prev.text().trim())) {
+        toRemove.unshift($prev);
+        break;
+      }
+      $prev = $prev.prev() as cheerio.Cheerio<any>;
+    }
+    return { toRemove, $links: $font2.find("a") };
   }
 
   // Strategy 2: element with text "Viyiz étout" followed by a <ul>
-  const VIYIZ_RE = /^viyiz.*[e\u00e9]tout/i;
   const candidates = (body as cheerio.Cheerio<any>)
     .find("i, em, b, strong, p, div, span, td")
     .toArray();
