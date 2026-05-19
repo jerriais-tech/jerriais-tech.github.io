@@ -81,7 +81,7 @@ const LesPagesLayout: React.FC<Props> = ({
           <aside className="corpus-sidebar">
             {authorSlug && authorPages.length > 0 && (
               <section className="sidebar-section">
-                <h3>Aôt'yes pages par {author}</h3>
+                <h3>Other pages by {author}</h3>
                 <ul>
                   {authorPages.map((p) => (
                     <li key={p.url}>
@@ -93,13 +93,13 @@ const LesPagesLayout: React.FC<Props> = ({
                   href={`/corpus/jerriais/auteurs/${authorSlug}/`}
                   className="sidebar-see-all"
                 >
-                  Voir toutes les pages →
+                  See all →
                 </a>
               </section>
             )}
             {topicPills.length > 0 && (
               <section className="sidebar-section">
-                <h3>Thèmes</h3>
+                <h3>Topics</h3>
                 <div className="topic-pills">
                   {topicPills.map((t) => (
                     <a

@@ -20,9 +20,9 @@ export default function AuteursIndex({ collections }: Data) {
   const authors: Author[] = collections.corpusAuthorList ?? [];
 
   return (
-    <Layout title="Auteurs" currentUrl="/corpus/jerriais/auteurs/">
+    <Layout title="Authors" currentUrl="/corpus/jerriais/auteurs/">
       <main className="my-8 mx-8 max-w-2xl md:mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Auteurs</h1>
+        <h1 className="text-3xl font-bold mb-6">Authors</h1>
         <ul className="space-y-1">
           {authors.map((a) => (
             <li key={a.slug}>

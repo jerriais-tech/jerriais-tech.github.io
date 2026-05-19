@@ -29,19 +29,19 @@ const Layout: React.FC<Props> = ({ title, currentUrl, children }) => (
               href="/corpus/jerriais/a/"
               aria-current={currentUrl?.startsWith("/corpus/jerriais/") && /^\/corpus\/jerriais\/[a-z]\/$/.test(currentUrl ?? "") ? "page" : undefined}
             >
-              Textes A–Z
+              Texts A–Z
             </a>
             <a
               href="/corpus/jerriais/auteurs/"
               aria-current={currentUrl?.startsWith("/corpus/jerriais/auteurs/") ? "page" : undefined}
             >
-              Auteurs
+              Authors
             </a>
             <a
               href="/corpus/jerriais/themes/"
               aria-current={currentUrl?.startsWith("/corpus/jerriais/themes/") ? "page" : undefined}
             >
-              Thèmes
+              Topics
             </a>
           </nav>
         </details>

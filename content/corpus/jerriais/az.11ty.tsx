@@ -36,9 +36,9 @@ export default function AzPage(data: Data & { letterGroup: LetterGroup }) {
   );
 
   return (
-    <Layout title={`Textes — ${letter}`} currentUrl={`/corpus/jerriais/${letter.toLowerCase()}/`}>
+    <Layout title={`Texts — ${letter}`} currentUrl={`/corpus/jerriais/${letter.toLowerCase()}/`}>
       <main className="my-8 mx-8 max-w-3xl md:mx-auto">
-        <h1 className="text-3xl font-bold mb-4">Textes — {letter}</h1>
+        <h1 className="text-3xl font-bold mb-4">Texts — {letter}</h1>
         <nav className="letter-strip" aria-label="Index par lettre">
           {ALL_LETTERS.map((l) =>
             presentLetters.has(l) ? (
