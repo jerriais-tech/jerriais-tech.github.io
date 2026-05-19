@@ -42,6 +42,7 @@ interface PageRecord {
   hasViyizEtout: boolean;
   detectedAuthor: string | null;
   multiAuthorSuspected: boolean;
+  dateYearAmbiguous: boolean;
   inputWordCount: number;
   urlClash: boolean;
   // Output quality (null if output not built)
@@ -175,6 +176,7 @@ function auditFile(relPath: string): PageRecord {
   const { data: parseData } = parseFile(buf, { rewriteRelativeUrls: false });
   const detectedAuthor = (parseData.author as string | undefined) ?? null;
   const multiAuthorSuspected = parseData.multiAuthorSuspected as boolean;
+  const dateYearAmbiguous = parseData.dateYearAmbiguous as boolean;
 
   const type = detectPageType($, html, basename);
   const urlClash = hasUrlClash(relPath, SOURCE_DIR);
@@ -190,6 +192,7 @@ function auditFile(relPath: string): PageRecord {
     hasViyizEtout,
     detectedAuthor,
     multiAuthorSuspected,
+    dateYearAmbiguous,
     inputWordCount,
     urlClash,
     outputExists: null,
@@ -280,6 +283,7 @@ Generated: ${new Date().toISOString()}
 | Output files built | ${built} |
 | Output files missing | ${notBuilt} |
 | Multi-author suspected | ${records.filter((r) => r.multiAuthorSuspected).length} |
+| Date year ambiguous    | ${records.filter((r) => r.dateYearAmbiguous).length} |
 
 ## By page type
 

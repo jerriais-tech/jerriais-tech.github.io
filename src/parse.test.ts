@@ -163,4 +163,16 @@ describe("attribution date + source extraction", () => {
       expect(parseInt(date.slice(0, 4))).toBeGreaterThanOrEqual(1000);
     }
   });
+
+  it("afliot.html — 2-digit year '10/10/10' decoded as 2010", () => {
+    const { date, dateYearAmbiguous } = parse("afliot.html");
+    expect(date).toBe("2010-10-10");
+    expect(dateYearAmbiguous).toBe(true);
+  });
+
+  it("lettrejerriaisecl2.html — 2-digit year '18/3/90' decoded as 1990", () => {
+    const { date, dateYearAmbiguous } = parse("lettrejerriaisecl2.html");
+    expect(date).toBe("1990-03-18");
+    expect(dateYearAmbiguous).toBe(true);
+  });
 });

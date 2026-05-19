@@ -288,7 +288,7 @@ function findAuthor($: cheerio.CheerioAPI): AuthorResult | undefined {
 
     // ── Signal 3: date within 80 chars after the link ─────────────────────
     const after = bodyHtml.slice(pos, pos + 80);
-    const hasDate = /\d{1,2}\/\d{1,2}\/\d{4}|\b(?:19|20)\d{2}\b/.test(after);
+    const hasDate = DATE_RE.test(after) || /\b(?:19|20)\d{2}\b/.test(after);
 
     // ── Signal 4: position in document ────────────────────────────────────
     const relPos = pos / bodyLen;
@@ -356,25 +356,32 @@ function extractTags($: cheerio.CheerioAPI): string[] {
 
 // ── Attribution date + source extraction ──────────────────────────────────
 
-const DATE_RE = /\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/;
+const DATE_RE = /\b(\d{1,2})\/(\d{1,2})\/(\d{4}|\d{2})\b/;
 
-/** Returns an ISO YYYY-MM-DD string, or undefined if the values are out of
- *  calendar range (guards against tag-boundary artifacts like "21/12/193"). */
+/** Returns an ISO YYYY-MM-DD string plus an ambiguity flag, or undefined if
+ *  values are out of calendar range (guards against tag-boundary artifacts).
+ *  Two-digit years use a pivot: ≤ 30 → 20xx, > 30 → 19xx. */
 function isoDate(
   day: string,
   month: string,
   year: string
-): string | undefined {
+): { date: string; yearAmbiguous: boolean } | undefined {
   const d = parseInt(day, 10);
   const m = parseInt(month, 10);
-  const y = parseInt(year, 10);
+  let y = parseInt(year, 10);
+  const yearAmbiguous = year.length === 2;
+  if (yearAmbiguous) y = y <= 30 ? 2000 + y : 1900 + y;
   if (m < 1 || m > 12 || d < 1 || d > 31 || y < 1000) return undefined;
-  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  return {
+    date: `${y}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`,
+    yearAmbiguous,
+  };
 }
 
 interface AttributionDate {
   date: string; // ISO YYYY-MM-DD
   source?: string;
+  dateYearAmbiguous: boolean; // true when year was 2 digits (century inferred)
 }
 
 /** Finds the last top-level <i>/<em> in the body (after viyiz removal) that
@@ -407,8 +414,9 @@ function extractAttributionDate(
   const dateMatch = DATE_RE.exec(lastEl.text());
   if (!dateMatch) return undefined;
 
-  const date = isoDate(dateMatch[1], dateMatch[2], dateMatch[3]);
-  if (!date) return undefined; // out-of-range values (e.g. tag-boundary artifact)
+  const dateResult = isoDate(dateMatch[1], dateMatch[2], dateMatch[3]);
+  if (!dateResult) return undefined; // out-of-range (e.g. tag-boundary artifact)
+  const { date, yearAmbiguous } = dateResult;
 
   // Derive source: normalise the element's HTML to plain lines, find the line
   // that holds the date, strip the date and any noise words from that line.
@@ -421,7 +429,7 @@ function extractAttributionDate(
     .filter(Boolean);
 
   const dateLine = lines.find((l) => DATE_RE.test(l));
-  if (!dateLine) return { date, source: undefined };
+  if (!dateLine) return { date, source: undefined, dateYearAmbiguous: yearAmbiguous };
 
   const sourceText = dateLine
     .replace(DATE_RE, "")
@@ -435,6 +443,7 @@ function extractAttributionDate(
   return {
     date,
     source: sourceText.length >= 2 ? sourceText : undefined,
+    dateYearAmbiguous: yearAmbiguous,
   };
 }
 
@@ -468,6 +477,7 @@ export function parseFile(
       tags,
       date: attribution?.date,
       source: attribution?.source,
+      dateYearAmbiguous: attribution?.dateYearAmbiguous ?? false,
     },
   };
 }
