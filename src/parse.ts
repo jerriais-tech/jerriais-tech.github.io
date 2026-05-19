@@ -253,7 +253,10 @@ function parseContent($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean, clash
   if (section) {
     section.toRemove.forEach((el) => el.remove());
   }
-  const back = body.find('a[href="../jerriais.html"]');
+  // Remove back-to-home nav links (the banner image linking to ../jerriais.html).
+  // Use :has(img) to avoid removing inline text mentions of "Jèrriais" that
+  // happen to also link to that page (e.g. "L'astronomie en Jèrriais").
+  const back = body.find('a[href="../jerriais.html"]:has(img)');
   back.remove();
   const title = body.find('font[color="#215e21"] h2');
   title.remove();
