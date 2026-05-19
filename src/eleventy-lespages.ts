@@ -84,6 +84,7 @@ async function eleventyLesPagesJerriaisesPlugin(
         const { outfile, content, id, type, ...data } = message;
         eleventyConfig.addTemplate(outfile, content, {
           ...data,
+          tags: ["jerriais"],
           layout,
         });
       }

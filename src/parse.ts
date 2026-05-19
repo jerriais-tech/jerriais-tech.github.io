@@ -528,7 +528,7 @@ export function parseFile(
   const authorResult = findAuthor($);
   const content = parseContent($, options.rewriteRelativeUrls, options.clashRemap);
   const related = parseRelated($, options.rewriteRelativeUrls, options.clashRemap);
-  const tags = extractTags($);
+  const topics = extractTags($);
   const attribution = extractAttributionDate($);
 
   return {
@@ -539,7 +539,7 @@ export function parseFile(
       authorSlug: authorResult?.slug,
       multiAuthorSuspected: authorResult?.multiAuthorSuspected ?? false,
       related,
-      tags,
+      topics,
       date: attribution?.date,
       source: attribution?.source,
       dateYearAmbiguous: attribution?.dateYearAmbiguous ?? false,

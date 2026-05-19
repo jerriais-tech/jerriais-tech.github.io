@@ -2,10 +2,11 @@ import React from "react";
 
 interface Props {
   title: string;
+  currentUrl?: string;
   children: React.ReactNode;
 }
 
-const Layout: React.FC<Props> = ({ title, children }) => (
+const Layout: React.FC<Props> = ({ title, currentUrl, children }) => (
   <html translate="no">
     <head>
       <meta charSet="UTF-8" />
@@ -13,7 +14,40 @@ const Layout: React.FC<Props> = ({ title, children }) => (
       <title>{title}</title>
       <link href="/index.css" rel="stylesheet" />
     </head>
-    <body>{children}</body>
+    <body>
+      <header>
+        <details className="site-nav">
+          <summary>Les Pages Jèrriaises ☰</summary>
+          <nav>
+            <a
+              href="/corpus/jerriais/"
+              aria-current={currentUrl === "/corpus/jerriais/" ? "page" : undefined}
+            >
+              Les Pages Jèrriaises
+            </a>
+            <a
+              href="/corpus/jerriais/a/"
+              aria-current={currentUrl?.startsWith("/corpus/jerriais/") && /^\/corpus\/jerriais\/[a-z]\/$/.test(currentUrl ?? "") ? "page" : undefined}
+            >
+              Textes A–Z
+            </a>
+            <a
+              href="/corpus/jerriais/auteurs/"
+              aria-current={currentUrl?.startsWith("/corpus/jerriais/auteurs/") ? "page" : undefined}
+            >
+              Auteurs
+            </a>
+            <a
+              href="/corpus/jerriais/themes/"
+              aria-current={currentUrl?.startsWith("/corpus/jerriais/themes/") ? "page" : undefined}
+            >
+              Thèmes
+            </a>
+          </nav>
+        </details>
+      </header>
+      {children}
+    </body>
   </html>
 );
 

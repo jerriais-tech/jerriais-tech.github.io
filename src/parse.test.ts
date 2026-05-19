@@ -102,8 +102,8 @@ describe("encoding", () => {
 
   it("blair.html (latin1) — boilerplate keyword properly decoded then filtered", () => {
     // 'Jèrriais' has a raw 0xE8 byte; must be decoded to è before stoplist check.
-    const { tags } = parse("blair.html");
-    expect(tags).toEqual([]);
+    const { topics } = parse("blair.html");
+    expect(topics).toEqual([]);
   });
 
   it("reverie.html (UTF-8) — title with HTML entity still decoded correctly", () => {
@@ -112,27 +112,27 @@ describe("encoding", () => {
   });
 });
 
-describe("tags extraction", () => {
+describe("topics extraction", () => {
   it("organnique.html — unique topic keywords extracted, boilerplate filtered", () => {
-    const { tags } = parse("organnique.html");
-    expect(tags).toContain("organic farming");
-    expect(tags).toContain("produits biologiques");
-    expect(tags).not.toContain("Jèrriais");
-    expect(tags).not.toContain("language");
-    expect(tags).not.toContain("Channel Islands");
+    const { topics } = parse("organnique.html");
+    expect(topics).toContain("organic farming");
+    expect(topics).toContain("produits biologiques");
+    expect(topics).not.toContain("Jèrriais");
+    expect(topics).not.toContain("language");
+    expect(topics).not.toContain("Channel Islands");
   });
 
   it("helier.html — domain-specific keywords retained", () => {
-    const { tags } = parse("helier.html");
-    expect(tags).toContain("hagiography");
-    expect(tags).toContain("patron saint");
-    expect(tags).not.toContain("Jersey");
-    expect(tags).not.toContain("langue");
+    const { topics } = parse("helier.html");
+    expect(topics).toContain("hagiography");
+    expect(topics).toContain("patron saint");
+    expect(topics).not.toContain("Jersey");
+    expect(topics).not.toContain("langue");
   });
 
   it("blair.html — only boilerplate keywords → empty tags", () => {
-    const { tags } = parse("blair.html");
-    expect(tags).toEqual([]);
+    const { topics } = parse("blair.html");
+    expect(topics).toEqual([]);
   });
 });
 
