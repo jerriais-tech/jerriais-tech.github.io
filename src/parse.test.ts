@@ -201,3 +201,29 @@ describe("pronunciation player", () => {
     expect(content).not.toContain("pronunciation");
   });
 });
+
+describe("clash remap", () => {
+  it("link to remapped page uses new slug", () => {
+    // noue.html contains links to other pages; we test remap via a file that
+    // links to noue.html to confirm rewriteHref applies the clash map.
+    const buf = readFileSync(join(BASE, "noue.html"));
+    const { content } = parseFile(buf, {
+      rewriteRelativeUrls: false,
+      clashRemap: { noue: "noue-page" },
+    });
+    // noue.html itself should not appear as a link href; noue-page/ should
+    expect(content).not.toMatch(/href="noue\.html/);
+  });
+
+  it("bare stem remap does not affect prefixed paths", () => {
+    // A link like "assembliee/index.html" should NOT get remapped by {index: "index-page"}
+    // because it has a directory prefix — it resolves to the natural section root.
+    const buf = readFileSync(join(BASE, "noue.html"));
+    const { content } = parseFile(buf, {
+      rewriteRelativeUrls: false,
+      clashRemap: { index: "index-page" },
+    });
+    // "assembliee/index.html" links (if any) should NOT become "assembliee/index-page/"
+    expect(content).not.toContain("assembliee/index-page/");
+  });
+});

@@ -23,9 +23,6 @@ export default async function (eleventyConfig) {
       "verbconj.html",
       "verbconj2.html",
       "verbconj3.html",
-      "index.html",
-      "assembliee.html",
-      "noue.html",
     ],
     layout: "lespages.11ty.tsx",
   });

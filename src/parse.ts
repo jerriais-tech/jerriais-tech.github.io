@@ -116,13 +116,24 @@ function findViyizSection(
 }
 
 /** Rewrites a single href value using the same rules as parseLinks. */
-function rewriteHref(href: string, rewriteRelativeUrls: boolean): string {
+function rewriteHref(href: string, rewriteRelativeUrls: boolean, clashRemap?: Record<string, string>): string {
   const url = new URL(href, "http://example.com");
   const isRelative =
     url.origin === new URL("http://example.com").origin;
   if (!isRelative) return href;
 
-  href = href.replace(/\.html/, "/");
+  if (clashRemap) {
+    // Apply clash remap for bare stems (no intermediate directory component).
+    // "noue.html" → "noue-page/", but "assembliee/index.html" stays as-is.
+    href = href.replace(/^([^/]+)\.html([^/]*)$/, (_, stem, rest) =>
+      `${clashRemap[stem] ?? stem}/${rest}`
+    );
+    if (href.includes(".html")) {
+      href = href.replace(/\.html/, "/");
+    }
+  } else {
+    href = href.replace(/\.html/, "/");
+  }
   const isRootRelative = href.startsWith("/");
   const isPageRelative = href.startsWith("#");
   if (rewriteRelativeUrls && !isRootRelative && !isPageRelative) {
@@ -135,7 +146,8 @@ function rewriteHref(href: string, rewriteRelativeUrls: boolean): string {
 
 function parseLinks(
   element: cheerio.Cheerio<any>,
-  rewriteRelativeUrls: boolean
+  rewriteRelativeUrls: boolean,
+  clashRemap?: Record<string, string>
 ) {
   const links = element.find("a");
   links.each((_i, el) => {
@@ -144,12 +156,7 @@ function parseLinks(
       const url = new URL(href, "http://example.com");
       const isRelative = url.origin === new URL("http://example.com").origin;
       if (isRelative) {
-        href = href.replace(/\.html/, "/");
-        const isRootRelative = href.startsWith("/");
-        const isPageRelative = href.startsWith("#");
-        if (rewriteRelativeUrls && !isRootRelative && !isPageRelative) {
-          href = `../${href}`;
-        }
+        href = rewriteHref(href, rewriteRelativeUrls, clashRemap);
         el.attribs.HREF = "";
         el.attribs.href = href;
       }
@@ -222,7 +229,7 @@ function parsePronunciation(
   });
 }
 
-function parseContent($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean) {
+function parseContent($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean, clashRemap?: Record<string, string>) {
   const body = $("body").clone();
 
   const section = findViyizSection($, body);
@@ -234,7 +241,7 @@ function parseContent($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean) {
   const title = body.find('font[color="#215e21"] h2');
   title.remove();
 
-  parseLinks(body, rewriteRelativeUrls);
+  parseLinks(body, rewriteRelativeUrls, clashRemap);
   if (rewriteRelativeUrls) {
     parseImages(body);
   }
@@ -243,7 +250,7 @@ function parseContent($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean) {
   return body.html() ?? "";
 }
 
-function parseRelated($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean) {
+function parseRelated($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean, clashRemap?: Record<string, string>) {
   const body = $("body").clone();
   const section = findViyizSection($, body);
   if (!section) return [];
@@ -253,7 +260,7 @@ function parseRelated($: cheerio.CheerioAPI, rewriteRelativeUrls: boolean) {
     .map((el) => {
       const href = el.attribs.href ?? el.attribs.HREF;
       if (!href) return null;
-      return { url: rewriteHref(href, rewriteRelativeUrls), text: $(el).text() };
+      return { url: rewriteHref(href, rewriteRelativeUrls, clashRemap), text: $(el).text() };
     })
     .filter((link): link is { url: string; text: string } => Boolean(link?.url));
 }
@@ -510,6 +517,7 @@ export function parseFile(
   file: Buffer,
   options: {
     rewriteRelativeUrls: boolean;
+    clashRemap?: Record<string, string>;
   }
 ): {
   content: string;
@@ -518,8 +526,8 @@ export function parseFile(
   const $ = cheerio.load(decodeHtmlBuffer(file));
   const title = $("title").text();
   const authorResult = findAuthor($);
-  const content = parseContent($, options.rewriteRelativeUrls);
-  const related = parseRelated($, options.rewriteRelativeUrls);
+  const content = parseContent($, options.rewriteRelativeUrls, options.clashRemap);
+  const related = parseRelated($, options.rewriteRelativeUrls, options.clashRemap);
   const tags = extractTags($);
   const attribution = extractAttributionDate($);
 

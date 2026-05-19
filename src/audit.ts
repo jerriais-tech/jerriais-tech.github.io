@@ -119,8 +119,16 @@ function outputSlug(relPath: string): string {
 function hasUrlClash(relPath: string, sourceDir: string): boolean {
   const p = path.parse(relPath);
   if (p.ext !== ".html") return false;
+  // Type A: foo.html where foo/index.html exists in a subdirectory
   const subdirIndex = path.join(sourceDir, p.dir, p.name, "index.html");
-  return fs.existsSync(subdirIndex);
+  if (fs.existsSync(subdirIndex)) return true;
+  // Type B: index.html where {parentDirName}.html exists in the same directory
+  if (p.name === "index") {
+    const containingDir = path.join(sourceDir, p.dir);
+    const parentName = path.basename(containingDir);
+    if (fs.existsSync(path.join(containingDir, `${parentName}.html`))) return true;
+  }
+  return false;
 }
 
 function auditOutput(slug: string, detectedAuthor: string | null, output: PageRecord): void {
