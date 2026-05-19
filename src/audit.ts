@@ -9,7 +9,7 @@
 import * as cheerio from "cheerio";
 import * as fs from "fs";
 import * as path from "path";
-import { AUTHORS } from "./parse";
+import { AUTHORS, parseFile } from "./parse";
 
 const SOURCE_DIR = "lespages/members.societe-jersiaise.org/geraint/jerriais";
 const OUTPUT_DIR = "_site/corpus/jerriais";
@@ -41,6 +41,7 @@ interface PageRecord {
   hasTables: boolean;
   hasViyizEtout: boolean;
   detectedAuthor: string | null;
+  multiAuthorSuspected: boolean;
   inputWordCount: number;
   urlClash: boolean;
   // Output quality (null if output not built)
@@ -158,6 +159,7 @@ function auditOutput(slug: string, detectedAuthor: string | null, output: PageRe
 function auditFile(relPath: string): PageRecord {
   const fullPath = path.join(SOURCE_DIR, relPath);
   const html = fs.readFileSync(fullPath, "latin1");
+  const buf = fs.readFileSync(fullPath);
   const $ = cheerio.load(html);
   const basename = path.parse(relPath).name;
 
@@ -170,12 +172,9 @@ function auditFile(relPath: string): PageRecord {
   const hasTables = /<table/i.test(html);
   const hasViyizEtout = $('font[size="2"]').find("a").length > 0;
 
-  const detectedAuthor =
-    (Object.entries(AUTHORS).find(([slug]) => {
-      return $("body a[href]")
-        .toArray()
-        .some((el) => el.attribs.href === `${slug}.html`);
-    })?.[1] as string) ?? null;
+  const { data: parseData } = parseFile(buf, { rewriteRelativeUrls: false });
+  const detectedAuthor = (parseData.author as string | undefined) ?? null;
+  const multiAuthorSuspected = parseData.multiAuthorSuspected as boolean;
 
   const type = detectPageType($, html, basename);
   const urlClash = hasUrlClash(relPath, SOURCE_DIR);
@@ -190,6 +189,7 @@ function auditFile(relPath: string): PageRecord {
     hasTables,
     hasViyizEtout,
     detectedAuthor,
+    multiAuthorSuspected,
     inputWordCount,
     urlClash,
     outputExists: null,
@@ -279,6 +279,7 @@ Generated: ${new Date().toISOString()}
 | Total HTML files | ${total} |
 | Output files built | ${built} |
 | Output files missing | ${notBuilt} |
+| Multi-author suspected | ${records.filter((r) => r.multiAuthorSuspected).length} |
 
 ## By page type
 
