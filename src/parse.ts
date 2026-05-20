@@ -533,6 +533,32 @@ function extractAttributionDate(
 
 // ── Public API ─────────────────────────────────────────────────────────────
 
+/** Extract all relative internal link slugs from the body content of a page,
+ *  excluding the back-to-home banner, the Viyiz étout section, and anchors. */
+export function extractInlineLinks(file: Buffer): string[] {
+  const $ = cheerio.load(decodeHtmlBuffer(file));
+  const body = $("body").clone() as cheerio.Cheerio<any>;
+
+  // Remove the viyiz section (those are captured separately as "related")
+  const section = findViyizSection($, body);
+  if (section) section.toRemove.forEach((el) => el.remove());
+
+  // Remove back-to-home nav banner links
+  body.find('a[href="../jerriais.html"]:has(img)').remove();
+
+  const slugs: string[] = [];
+  body.find("a[href], a[HREF]").each((_i, el) => {
+    const href = el.attribs.href ?? el.attribs.HREF ?? "";
+    if (!href || href.startsWith("#") || href.startsWith("mailto:")) return;
+    const url = new URL(href, "http://example.com");
+    if (url.origin !== new URL("http://example.com").origin) return; // external
+    const pathname = url.pathname.replace(/\.html$/, "").replace(/\/$/, "");
+    if (!pathname || pathname === "." || pathname.includes("..")) return;
+    slugs.push(pathname);
+  });
+  return [...new Set(slugs)];
+}
+
 export function parseFile(
   file: Buffer,
   options: {

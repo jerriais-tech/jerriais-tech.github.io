@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "pages": "tsx src/import all 'lespages/members.societe-jersiaise.org/geraint' 'content'",
+    "graph": "tsx src/graph.ts",
+    "graph:gexf": "tsx src/graph.ts --gexf",
     "start": "eleventy --serve",
     "build": "eleventy",
     "test": "vitest run"
@@ -26,6 +27,11 @@
     "@types/turndown": "^5.0.5",
     "cheerio": "^1.1.2",
     "commander": "^14.0.0",
+    "graphology": "^0.26.0",
+    "graphology-communities-louvain": "^2.0.2",
+    "graphology-components": "^1.5.4",
+    "graphology-gexf": "^0.13.2",
+    "graphology-metrics": "^2.4.0",
     "postcss": "^8.5.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
