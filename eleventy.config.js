@@ -16,6 +16,7 @@ export default async function (eleventyConfig) {
   eleventyConfig.setLayoutsDirectory("../layouts");
 
   eleventyConfig.addPassthroughCopy({ "content/pronunciation.js": "pronunciation.js" });
+  eleventyConfig.addPassthroughCopy({ "CNAME": "CNAME" });
 
   // Utility: strip diacritics and uppercase for normalised sort/grouping
   const normalise = (s) =>
