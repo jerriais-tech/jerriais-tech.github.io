@@ -46,7 +46,7 @@ form.addEventListener('submit', submitForm);
 
 export default function render(_data: unknown) {
   return (
-    <Layout title="Jèrriais.Tech">
+    <Layout title="Jèrriais.Tech" showMenu={false}>
       {/* Hero */}
       <div className="px-4 py-20 text-center">
         <h1 className="text-5xl font-bold mb-4">Jèrriais.Tech</h1>
@@ -59,11 +59,59 @@ export default function render(_data: unknown) {
       </div>
 
       {/* Projects */}
-      <div className="max-w-5xl mx-auto px-4 py-16">
+      <div className="max-w-screen-xl mx-auto px-4 py-16">
         <h2 className="text-2xl font-bold pb-2 mb-8 border-b border-gray-200">
           Projects
         </h2>
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
+        <div className="grid grid-cols-2 gap-10 lg:grid-cols-4">
+          <ProjectCard
+            href="https://huggingface.co/spaces/jerriais-tech/jerriais-tts"
+            ctaText="Hear Jèrriais"
+            title="Jèrriais Text-To-Speech"
+            description={
+              <>
+                Enter Jèrriais text and hear how it is pronounced. Trained on
+                pronunciation examples recorded by Geraint Jennings. Click
+                "Restart space" if the app has gone to sleep.
+              </>
+            }
+            icon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+              >
+                <path d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-.708.707A7.48 7.48 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303z" />
+                <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.48 5.48 0 0 1 11.025 8a5.48 5.48 0 0 1-1.61 3.89z" />
+                <path d="M10.025 8a4.5 4.5 0 0 1-1.318 3.182L8 10.475A3.5 3.5 0 0 0 9.025 8c0-.966-.392-1.841-1.025-2.475l.707-.707A4.5 4.5 0 0 1 10.025 8M7 4a.5.5 0 0 0-.812-.39L3.825 5.5H1.5A.5.5 0 0 0 1 6v4a.5.5 0 0 0 .5.5h2.325l2.363 1.89A.5.5 0 0 0 7 12zM4.312 6.39 6 5.04v5.92L4.312 9.61A.5.5 0 0 0 4 9.5H2v-3h2a.5.5 0 0 0 .312-.11" />
+              </svg>
+            }
+          />
+          <ProjectCard
+            href="https://dictionary.jerriais.tech/"
+            ctaText="Browse the dictionary"
+            title="Jèrriais dictionary"
+            description={
+              <>
+                A digital version of the English/Jèrriais and Jèrriais/English
+                dictionaries. Copyright for the dictionary data is held by
+                Société Jèrsiaise, Jersey Heritage and Le Don Balleine.
+              </>
+            }
+            icon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="1em"
+                height="1em"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+              >
+                <path d="M8.5 2.687c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783" />
+              </svg>
+            }
+          />
           <ProjectCard
             href="https://www.keyman.com/keyboards/jerriais"
             ctaText="Install the keyboard"
@@ -96,25 +144,6 @@ export default function render(_data: unknown) {
             }
           />
           <ProjectCard
-            href="https://dictionary.jerriais.tech/"
-            ctaText="Browse the dictionary"
-            title="Jèrriais dictionary"
-            description="A digital version of the English/Jèrriais and Jèrriais/English
-              dictionaries. Copyright for the dictionary data is held by Société
-              Jèrsiaise, Jersey Heritage and Le Don Balleine."
-            icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="1em"
-                height="1em"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-              >
-                <path d="M8.5 2.687c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783" />
-              </svg>
-            }
-          />
-          <ProjectCard
             href="./jerridle"
             ctaText="Play Jèrridle"
             title="Jèrridle"
@@ -138,7 +167,7 @@ export default function render(_data: unknown) {
       </div>
 
       {/* Community */}
-      <div className="max-w-5xl mx-auto px-4 py-16">
+      <div className="max-w-screen-xl mx-auto px-4 py-16">
         <h2 className="text-2xl font-bold pb-2 mb-8 border-b border-gray-200">
           Community
         </h2>
@@ -191,7 +220,7 @@ export default function render(_data: unknown) {
       </div>
 
       {/* Contact */}
-      <div className="max-w-5xl mx-auto px-4 py-16" id="contact">
+      <div className="max-w-screen-xl mx-auto px-4 py-16" id="contact">
         <h2 className="text-2xl font-bold pb-2 mb-8 border-b border-gray-200">
           Contact
         </h2>
