@@ -10,6 +10,7 @@ export interface ProcessFileRequestMessage {
   infile: string;
   outdir: string;
   indir: string;
+  clashRemap?: Record<string, string>;
 }
 
 export interface CopyFileResponseMessage {

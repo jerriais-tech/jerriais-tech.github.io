@@ -8,6 +8,7 @@ function processFile({
   infile,
   outdir,
   indir,
+  clashRemap,
 }: ProcessFileRequestMessage): ResponseMessage {
   const outpath = path.parse(infile);
   outpath.dir = path.relative(indir, outpath.dir);
@@ -15,6 +16,13 @@ function processFile({
   if (outpath.ext === ".html") {
     // Create a virtual template for HTML files
     outpath.dir = path.join("corpus/jerriais", outpath.dir);
+
+    // Remap clashing stems (Type A: top-level file clashing with same-named
+    // subdir; Type B: index.html clashing with {dirName}.html in same dir)
+    if (clashRemap?.[outpath.name]) {
+      outpath.name = clashRemap[outpath.name];
+    }
+
     outpath.ext = ".md";
     outpath.base = `${outpath.name}${outpath.ext}`;
 
@@ -23,6 +31,7 @@ function processFile({
       rewriteRelativeUrls:
         outpath.name !== "index" &&
         outpath.name !== outpath.dir.split(path.sep).pop(),
+      clashRemap,
     });
     const outfile = path.format(outpath);
     return {

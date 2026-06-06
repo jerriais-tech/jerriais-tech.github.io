@@ -1,5 +1,215 @@
----
-  permalink: /corpus/index.css
----
 @import "tailwindcss" source("../layouts");
+@source "../content";
 @plugin "@tailwindcss/typography";
+
+/* ── Site nav (top bar) ─────────────────────────────────────────────────── */
+
+.site-nav {
+  background: #1a1a2e;
+  color: #e8e8f0;
+  padding: 0.5rem 1rem;
+}
+
+/* Mobile: <summary> is the toggle; nav links are hidden until open */
+.site-nav summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  list-style: none;
+  user-select: none;
+  padding: 0.25rem 0;
+}
+.site-nav summary::-webkit-details-marker { display: none; }
+
+.site-nav nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.site-nav nav a {
+  color: #c8c8e8;
+  text-decoration: none;
+  padding: 0.25rem 0;
+}
+.site-nav nav a:hover,
+.site-nav nav a:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+}
+.site-nav nav a[aria-current="page"] {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Desktop: always show, collapse the toggle affordance, layout horizontally */
+@media (min-width: 768px) {
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+  .site-nav summary {
+    cursor: default;
+    flex-shrink: 0;
+  }
+  /* Force open even without the open attribute */
+  .site-nav nav {
+    flex-direction: row;
+    gap: 1.25rem;
+    padding: 0;
+    display: flex !important;
+  }
+  /* Prevent toggle on click on desktop */
+  .site-nav[open] summary::after,
+  .site-nav:not([open]) summary::after { content: ""; }
+}
+
+/* ── Corpus two-column layout ───────────────────────────────────────────── */
+
+.corpus-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .corpus-layout {
+    grid-template-columns: 1fr 20rem;
+    gap: 2rem;
+    align-items: start;
+  }
+}
+
+/* ── Sidebar ────────────────────────────────────────────────────────────── */
+
+.corpus-sidebar {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .corpus-sidebar {
+    border-top: none;
+    border-left: 1px solid #e2e8f0;
+    margin-top: 2rem;
+    padding: 0 0 0 1.5rem;
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+.sidebar-section {
+  margin-bottom: 1.5rem;
+}
+
+.sidebar-section h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+}
+
+.sidebar-section ul li + li { margin-top: 0.25rem; }
+
+.sidebar-see-all {
+  font-size: 0.8rem;
+  color: #64748b;
+  text-decoration: none;
+}
+.sidebar-see-all:hover { text-decoration: underline; }
+
+/* ── Topic pills ────────────────────────────────────────────────────────── */
+
+.topic-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.topic-pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #334155;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.topic-pill:hover,
+.topic-pill:focus-visible {
+  background: #cbd5e1;
+}
+
+/* ── Letter strip ───────────────────────────────────────────────────────── */
+
+.letter-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.letter-strip a,
+.letter-strip span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.letter-strip a {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+.letter-strip a:hover,
+.letter-strip a[aria-current="page"] {
+  background: #334155;
+  color: #fff;
+}
+
+.letter-strip span {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: default;
+}
+
+/* ── Pronunciation player ───────────────────────────────────────────────── */
+
+a.pronunciation {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  vertical-align: middle;
+  opacity: 0.85;
+  transition: opacity 0.15s;
+}
+a.pronunciation:hover,
+a.pronunciation:focus-visible {
+  opacity: 1;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+a.pronunciation--playing img {
+  filter: brightness(1.5) saturate(0.3);
+}
