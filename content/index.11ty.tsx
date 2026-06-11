@@ -63,7 +63,7 @@ export default function render(_data: unknown) {
         <h2 className="text-2xl font-bold pb-2 mb-8 border-b border-gray-200">
           Projects
         </h2>
-        <div className="grid grid-cols-2 gap-10 lg:grid-cols-4">
+        <div className="grid gap-10 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           <ProjectCard
             href="https://huggingface.co/spaces/jerriais-tech/jerriais-tts"
             ctaText="Hear Jèrriais"
