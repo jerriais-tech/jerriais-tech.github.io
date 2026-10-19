@@ -65,7 +65,7 @@ export default function render(_data: unknown) {
         </h2>
         <div className="grid gap-10 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           <ProjectCard
-            href="https://jerriais-tech-jerriais-tts.hf.space/"
+            href="https://tts.jerriais.tech/"
             ctaText="Hear Jèrriais"
             title="Jèrriais Text-To-Speech"
             description={
