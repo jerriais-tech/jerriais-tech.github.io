@@ -3,45 +3,12 @@ import Layout from "../layouts/Layout";
 import ProjectCard from "../layouts/ProjectCard";
 import CommunityLink from "../layouts/CommunityLink";
 
-const contactFormScript = `
-const form = document.getElementById("form");
-const button = form.querySelector("button");
-const fieldset = form.querySelector("fieldset");
-const formError = document.getElementById("form-error");
-
-function success() {
-  form.innerHTML = '<div class="text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3">Form submitted. We\\'ll get back to you as soon as we can.</div>';
-}
-
-function failure() {
-  button.innerText = "Submit";
-  fieldset.disabled = false;
-  formError.style.display = "block";
-}
-
-async function submitForm(event) {
-  event.preventDefault();
-  button.innerText = "Submitting...";
-  fieldset.disabled = false;
-  formError.style.display = "none";
-  const formData = Object.fromEntries(new FormData(event.target).entries());
-  fieldset.disabled = true;
-  try {
-    const response = await fetch(
-      "https://www.form-to-email.com/api/s/57zwbiuy5Jli",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      }
-    );
-    if (response.ok) { success(); } else { failure(); }
-  } catch (e) {
-    failure();
-  }
-}
-
-form.addEventListener('submit', submitForm);
+// Assemble the address in the browser so it doesn't appear in the HTML source
+const contactEmailScript = `
+const link = document.getElementById("contact-email");
+const address = [link.dataset.user, link.dataset.domain].join("@");
+link.href = "mailto:" + address;
+link.textContent = address;
 `;
 
 export default function render(_data: unknown) {
@@ -246,80 +213,21 @@ export default function render(_data: unknown) {
         <h2 className="text-2xl font-bold pb-2 mb-8 border-b border-gray-200">
           Contact
         </h2>
-        <p className="mb-6 text-gray-600">Contact us using the form below.</p>
-        <div className="max-w-2xl">
-          <form id="form">
-            <fieldset>
-              <div className="mb-4">
-                <label
-                  htmlFor="form-name"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  id="form-name"
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="mb-4">
-                <label
-                  htmlFor="form-email"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Email address
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  id="form-email"
-                  required
-                  aria-describedby="emailHelp"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <p id="emailHelp" className="text-xs text-gray-500 mt-1">
-                  We'll never share your email with anyone else.
-                </p>
-              </div>
-              <div className="mb-6">
-                <label
-                  htmlFor="form-message"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Message
-                </label>
-                <textarea
-                  required
-                  id="form-message"
-                  name="message"
-                  rows={3}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <button
-                  type="submit"
-                  className="text-white bg-blue-600 hover:bg-blue-700 rounded-lg text-sm px-5 py-2.5 font-medium"
-                >
-                  Submit
-                </button>
-                <p
-                  id="form-error"
-                  style={{ display: "none" }}
-                  className="text-red-600 text-sm mt-3"
-                >
-                  Something went wrong. Please try again later.
-                </p>
-              </div>
-            </fieldset>
-          </form>
-        </div>
+        <p className="text-gray-600">
+          Email us at{" "}
+          <a
+            id="contact-email"
+            data-user="contact"
+            data-domain="jerriais.tech"
+            className="text-blue-600 hover:underline"
+          >
+            contact [at] jerriais [dot] tech
+          </a>
+          .
+        </p>
       </div>
 
-      <script dangerouslySetInnerHTML={{ __html: contactFormScript }} />
+      <script dangerouslySetInnerHTML={{ __html: contactEmailScript }} />
     </Layout>
   );
 }
